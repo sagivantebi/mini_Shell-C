@@ -1,4 +1,4 @@
-//Sagiv Antebi 318159282
+//Sagiv Antebi
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
