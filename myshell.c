@@ -31,25 +31,31 @@ int main(int argc, const char *argv[]) {
     int stat;
     pid_t childID;
     pid_t pid = getpid();
-    int indexToArgv;
-    char *originalPath = getenv(PATH_STR);
+    int indexToArgv = 0;
     //the array of commands
     char *argvChild[SIZE];
-    char *newPath = malloc(strlen(originalPath) + 1);
-    strcpy(newPath, originalPath);
     int i;
-    for (i = 0; i < argc; ++i) {
-        newPath = realloc(newPath, strlen(newPath) + strlen(argv[i]) + 2);
-        sprintf(newPath, "%s:%s", originalPath, argv[i]);
+    int j;
+    //creating the new path that got inserted
+    if (argc != 1) {
+        char *originalPath = getenv(PATH_STR);
+        char *newPath = malloc(strlen(originalPath) + 1);
+        strcpy(newPath, originalPath);
+        for (i = 1; i < argc; ++i) {
+//creating the new path using realloc + sprintf - allocating space for the length + 1 for each one,separate with :
+            newPath = realloc(newPath, strlen(newPath) + 1 + strlen(argv[i]) + 1);
+            sprintf(newPath, "%s:%s", originalPath, argv[i]);
+        }
+        setenv(PATH_STR, newPath, 1);
+        //free newPath
+        free(newPath);
     }
-    setenv("PATH", newPath, 1);
-    //free newPath
-    free(newPath);
 
     //main loop - until the user insert "exit"
     do {
+        strcpy(buffer, "");
         //free the array  - argv
-        for (int j = 0; j < indexToArgv; j++) {
+        for (j = 0; j < indexToArgv; j++) {
             free(argvChild[j]);
             argvChild[j] = 0;
         }
@@ -57,6 +63,14 @@ int main(int argc, const char *argv[]) {
         printf("$ ");
         fflush(stdout);
         scanf("%[^\n]%*c", buffer);
+        //checks if the buffer is empty - the user insert only enter (\n)
+        while (strcmp(buffer, "") == 0) {
+            scanf("%c", buffer);
+            strcpy(buffer, "");
+            printf("$ ");
+            fflush(stdout);
+            scanf("%[^\n]%*c", buffer);
+        }
         strcpy(historyCommands[counter], buffer);
         //For the free section
         strcpy(bufferCopy1, buffer);
@@ -77,7 +91,7 @@ int main(int argc, const char *argv[]) {
 
         //If the command is exit we should exit the program
         if (strcmp(firstToken, EXIT) == 0) {
-            for (int j = 0; j < indexToArgv; j++) {
+            for (j = 0; j < indexToArgv; j++) {
                 free(argvChild[j]);
                 argvChild[j] = 0;
             }
@@ -93,28 +107,29 @@ int main(int argc, const char *argv[]) {
             //If the command is cd
         else if (strcmp(firstToken, CD) == 0) {
             token = strtok_r(NULL, SPACE, &endStrToken);
-            //if there is just cd ignore it
+            //if there is just cd ignore it;
             if (argvChild[1] == NULL) {
                 perror("cd failed\n");
                 addToHistory(historyComAndPID, bufferCopy2, pidChar, counter);
                 counter++;
             }
-            //if there is just ~ ignore it
+                //if there is just ~ ignore it
             else if (strcmp(argvChild[1], "~") == 0) {
                 perror("cd failed\n");
                 addToHistory(historyComAndPID, bufferCopy2, pidChar, counter);
                 counter++;
-            }
-            else {
-                chdir(argvChild[1]);
+            } else {
+                if (chdir(argvChild[1]) != 0) {
+                    perror("cd failed\n");
+                }
             }
         }
-        //The fork got an error
+            //The fork got an error
         else if ((childID = fork()) == -1) {
             perror("fork failed\n");
             exit(-1);
         }
-        //The child
+            //The child
         else if (childID == 0) {
             pid = getpid();
             historyPID[counter] = pid;
@@ -137,7 +152,6 @@ int main(int argc, const char *argv[]) {
                     strcpy(pathCreateWithCommand, pathCreate);
                     strcat(pathCreateWithCommand, SLASH);
                     strcat(pathCreateWithCommand, firstToken);
-
                     //check if the command exists
                     if (access(pathCreateWithCommand, F_OK) != -1) {
                         execvp(pathCreateWithCommand, argvChild);
@@ -164,7 +178,7 @@ int main(int argc, const char *argv[]) {
         }
     } while (1);
     //free the array  - argv - after the exit
-    for (int j = 0; j < indexToArgv; j++) {
+    for (j = 0; j < indexToArgv; j++) {
         free(argvChild[j]);
         argvChild[j] = 0;
     }
@@ -179,7 +193,8 @@ void addToHistory(char historyComAndPID[SIZE][SIZE], char command[SIZE], char PI
 
 
 void printHistory(char historyComAndPID[SIZE][SIZE], int sizeOfArray) {
-    for (int i = 0; i < sizeOfArray; ++i) {
+    int i;
+    for (i = 0; i < sizeOfArray; ++i) {
         printf("%s\n", (char *) historyComAndPID[i]);
     }
 }
