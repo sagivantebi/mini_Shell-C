@@ -109,24 +109,24 @@ int main(int argc, const char *argv[]) {
             token = strtok_r(NULL, SPACE, &endStrToken);
             //if there is just cd ignore it;
             if (argvChild[1] == NULL) {
-                perror("cd failed\n");
+                perror("cd failed");
                 addToHistory(historyComAndPID, bufferCopy2, pidChar, counter);
                 counter++;
             }
                 //if there is just ~ ignore it
             else if (strcmp(argvChild[1], "~") == 0) {
-                perror("cd failed\n");
+                perror("cd failed");
                 addToHistory(historyComAndPID, bufferCopy2, pidChar, counter);
                 counter++;
             } else {
                 if (chdir(argvChild[1]) != 0) {
-                    perror("cd failed\n");
+                    perror("cd failed");
                 }
             }
         }
             //The fork got an error
         else if ((childID = fork()) == -1) {
-            perror("fork failed\n");
+            perror("fork failed");
             exit(-1);
         }
             //The child
@@ -154,7 +154,9 @@ int main(int argc, const char *argv[]) {
                     strcat(pathCreateWithCommand, firstToken);
                     //check if the command exists
                     if (access(pathCreateWithCommand, F_OK) != -1) {
-                        execvp(pathCreateWithCommand, argvChild);
+                        if (execvp(pathCreateWithCommand, argvChild) == -1){
+                            perror("exec failed");
+                        }
                         exit(0);
                     } else {
 
@@ -167,11 +169,13 @@ int main(int argc, const char *argv[]) {
                 }
                 tokenPath = strtok_r(NULL, COLON, &end_str);
             }
+            perror("execvp failed");
             exit(0);
         }
             //The father
         else {
-            wait(&stat);
+            if (wait(&stat) == -1)
+                perror("wait failed");
             sprintf(pidChar, "%d", childID);
             addToHistory(historyComAndPID, bufferCopy2, pidChar, counter);
             counter++;
