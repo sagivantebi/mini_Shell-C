@@ -11,8 +11,6 @@
 #define HISTORY "history"
 #define CD "cd"
 #define SPACE " "
-#define COLON ":"
-#define SLASH "/"
 #define PATH_STR "PATH"
 
 void addToHistory(char historyComAndPID[SIZE][SIZE], char command[SIZE], char PID_child[SIZE], int i);
@@ -33,12 +31,12 @@ int main(int argc, const char *argv[]) {
     pid_t pid = getpid();
     int indexToArgv = 0;
     //the array of commands
-
+    char *originalPath;
     int i;
     int j;
     //creating the new path that got inserted
     if (argc != 1) {
-        char *originalPath = getenv(PATH_STR);
+        originalPath = getenv(PATH_STR);
         char *newPath = malloc(strlen(originalPath) + 1);
         strcpy(newPath, originalPath);
         for (i = 1; i < argc; ++i) {
@@ -50,14 +48,14 @@ int main(int argc, const char *argv[]) {
         //free newPath
         free(newPath);
     }
-    char *argvChild[SIZE*SIZE];
+    char *argvChild[SIZE * SIZE];
     //main loop - until the user insert "exit"
     do {
         strcpy(buffer, "");
         //free the array  - argv
         for (j = 0; j < indexToArgv; j++) {
             free(argvChild[j]);
-            argvChild[j]=NULL;
+            argvChild[j] = NULL;
         }
         indexToArgv = 0;
         printf("$ ");
@@ -83,7 +81,7 @@ int main(int argc, const char *argv[]) {
         strcpy(firstToken, token);
         //go through the SPACE of the commands inserted in the shell
         while (token != NULL) {
-            argvChild[indexToArgv] = (char *) malloc(sizeof(token)+1);
+            argvChild[indexToArgv] = (char *) malloc(SIZE + 1);
             strcpy(argvChild[indexToArgv], token);
             token = strtok_r(NULL, SPACE, &endStrToken);
             indexToArgv++;
@@ -133,42 +131,7 @@ int main(int argc, const char *argv[]) {
         else if (childID == 0) {
             pid = getpid();
             historyPID[counter] = pid;
-            indexToArgv = 0;
-
-            //ThatS is for the using of token in token - found it on the web and this is LEGIT!
-            char *end_str;
-            char *tokenPath = strtok_r(getenv(PATH_STR), COLON, &end_str);
-
-            char pathCreate[SIZE * SIZE];
-            char pathCreateWithCommand[SIZE * SIZE];
-            //go through the : of the paths
-            while (tokenPath != NULL) {
-                char *end_token;
-                char *tokenPathSlash = strtok_r(tokenPath, SLASH, &end_token);
-                strcpy(pathCreate, SLASH);
-                strcat(pathCreate, tokenPathSlash);
-                //go through the / of the path
-                while (tokenPathSlash != NULL) {
-                    strcpy(pathCreateWithCommand, pathCreate);
-                    strcat(pathCreateWithCommand, SLASH);
-                    strcat(pathCreateWithCommand, firstToken);
-                    //check if the command exists
-                    if (access(pathCreateWithCommand, F_OK) != -1) {
-                        if (execvp(pathCreateWithCommand, argvChild) == -1){
-                            perror("exec failed");
-                        }
-                        exit(0);
-                    } else {
-
-                    }
-                    tokenPathSlash = strtok_r(NULL, SLASH, &end_token);
-                    if (tokenPathSlash != NULL) {
-                        strcat(pathCreate, SLASH);
-                        strcat(pathCreate, tokenPathSlash);
-                    }
-                }
-                tokenPath = strtok_r(NULL, COLON, &end_str);
-            }
+            execvp(argvChild[0], argvChild);
             perror("execvp failed");
             exit(0);
         }
@@ -202,6 +165,3 @@ void printHistory(char historyComAndPID[SIZE][SIZE], int sizeOfArray) {
         printf("%s\n", (char *) historyComAndPID[i]);
     }
 }
-
-
-
