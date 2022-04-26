@@ -33,7 +33,7 @@ int main(int argc, const char *argv[]) {
     pid_t pid = getpid();
     int indexToArgv = 0;
     //the array of commands
-    char *argvChild[SIZE];
+
     int i;
     int j;
     //creating the new path that got inserted
@@ -50,14 +50,14 @@ int main(int argc, const char *argv[]) {
         //free newPath
         free(newPath);
     }
-
+    char *argvChild[SIZE*SIZE];
     //main loop - until the user insert "exit"
     do {
         strcpy(buffer, "");
         //free the array  - argv
         for (j = 0; j < indexToArgv; j++) {
             free(argvChild[j]);
-            argvChild[j] = 0;
+            argvChild[j]=NULL;
         }
         indexToArgv = 0;
         printf("$ ");
@@ -83,7 +83,7 @@ int main(int argc, const char *argv[]) {
         strcpy(firstToken, token);
         //go through the SPACE of the commands inserted in the shell
         while (token != NULL) {
-            argvChild[indexToArgv] = (char *) malloc(sizeof(token));
+            argvChild[indexToArgv] = (char *) malloc(sizeof(token)+1);
             strcpy(argvChild[indexToArgv], token);
             token = strtok_r(NULL, SPACE, &endStrToken);
             indexToArgv++;
