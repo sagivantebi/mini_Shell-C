@@ -131,9 +131,10 @@ int main(int argc, const char *argv[]) {
         else if (childID == 0) {
             pid = getpid();
             historyPID[counter] = pid;
-            execvp(argvChild[0], argvChild);
-            perror("execvp failed");
-            exit(0);
+            if (execvp(argvChild[0], argvChild) == -1) {
+                perror("exec failed");
+                exit(-1);
+            }
         }
             //The father
         else {
@@ -165,3 +166,6 @@ void printHistory(char historyComAndPID[SIZE][SIZE], int sizeOfArray) {
         printf("%s\n", (char *) historyComAndPID[i]);
     }
 }
+
+
+
