@@ -54,12 +54,5 @@ The shell maintains a history of commands executed along with the process IDs (P
 - **exec failed**: If the `execvp` function fails to execute a command, the program will print an error message.
 - **cd failed**: If the `cd` command fails, the program will print an error message.
 
-## License
-
-This project is licensed under the MIT License.
-
-## Author
-
-Sagiv Antebi
 
 
